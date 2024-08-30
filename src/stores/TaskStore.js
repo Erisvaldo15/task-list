@@ -1,65 +1,54 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
-
+import { computed, ref } from "vue";
 export const useTaskStore = defineStore('task', () => {
-
-    let tasks = ref([])
-    let areThereError = ref(false)
-
-    function addTask(event) {
-
-        let keyFired = event.code.toLowerCase()
-
-        if (keyFired) {
-            areThereError.value = false
-            event.target.placeholder = "Add new task"
-        }
-
-        if (keyFired === 'enter') {
-
-            let typedValue = event.target.value
-
-            if (typedValue) {
-                areThereError.value = false
-                tasks.value.push({ name: typedValue, done: false })
-                return
-            }
-
-            areThereError.value = true
-            event.target.placeholder = "Please, type some task"
-        }
-
-    }
-
-    function whichTasksDoYouWantToSee(data, status, event) {
-
-        const clickedStatus = event.target.textContent.toLowerCase()
-
-        tasks.value = data
-
-        status.filter((value) => value.isActivate = value.status === clickedStatus ? true : false)
-    
-        switch (clickedStatus) {
-    
+    ;
+    let tasks = ref([]);
+    let isThereError = ref(false);
+    let currentStatus = ref("all");
+    const getTasksCompleted = computed(() => tasks.value.filter((task) => task.done).length);
+    const filteredTasks = computed(() => filterTasks(currentStatus.value));
+    function filterTasks(status) {
+        switch (status) {
             case 'pendent':
-                tasks.value = tasks.value.filter((value) => !value.done)
-            break;
-    
-            case 'completed':
-                tasks.value = tasks.value.filter((value) => value.done)
-            break;
+                return tasks.value.filter((value) => !value.done);
+            case 'done':
+                return tasks.value.filter((value) => value.done);
+            default:
+                return tasks.value;
         }
-    
     }
-
-    function toggleStatusOfTask(task) {
-        tasks.value.filter((value) => value.name === task.name ? value.done = !value.done : '')
+    function addTask(event) {
+        const inputFired = event.target;
+        if (event.code.toLowerCase() === "enter" && inputFired) {
+            const trimmedValue = inputFired.value.trim();
+            if (trimmedValue) {
+                isThereError.value = false;
+                tasks.value.push({ name: inputFired.value.trim(), done: false });
+                inputFired.placeholder = "Add new task";
+            }
+            else {
+                isThereError.value = true;
+                inputFired.placeholder = "Please, type some task";
+            }
+        }
     }
-
-    function getTasksCompleted() {
-        let completedTasks = tasks.value.filter((value) => value.done === true ? value : 0)
-        return completedTasks.length
+    function showSpecificTasks(data, statusList, event) {
+        let target = event.target;
+        if (target && target.textContent) {
+            if (["all", "pendent", "done"].includes(target.textContent)) {
+                const clickedStatus = target.textContent.toLowerCase();
+                tasks.value = data;
+                statusList.forEach((status) => {
+                    if (status === clickedStatus)
+                        currentStatus.value = clickedStatus;
+                });
+            }
+        }
     }
-
-    return { tasks, areThereError, addTask, whichTasksDoYouWantToSee, toggleStatusOfTask, getTasksCompleted }
-}) 
+    function toggleStatusOfTask(chosenTask) {
+        const taskForChange = tasks.value.find((task) => task.name === chosenTask.name);
+        if (taskForChange)
+            taskForChange.done = !taskForChange.done;
+    }
+    return { tasks, isThereError, currentStatus, filteredTasks, getTasksCompleted, addTask, showSpecificTasks, toggleStatusOfTask };
+});

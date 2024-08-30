@@ -9,11 +9,11 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 
 import { ref, onMounted } from 'vue'
 
-const checkbox = ref(null)
+const checkbox = ref<HTMLInputElement | null>(null)
 const taskElement = ref(null)
 
 const task = defineProps({
@@ -25,7 +25,11 @@ const task = defineProps({
 
 })
 
-onMounted(() => checkbox.value.checked = task.taskData.done)
+onMounted(() => {
+    if (checkbox.value) {
+        checkbox.value.checked = task.taskData.done;
+    }
+});
 
 </script>
 

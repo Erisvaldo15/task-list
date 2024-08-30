@@ -1,16 +1,16 @@
 <template>
     <main class="tasks-manager">
-        <h2> Task List ({{ taskStore.getTasksCompleted() }} of {{ taskStore.tasks.length }}) </h2>
-        <input type="text" name="new-task" id="new-task" placeholder="Add new task" :class="{ error: taskStore.areThereError }"
+        <h2> Task List ({{ taskStore.getTasksCompleted }} of {{ taskStore.tasks.length }}) </h2>
+        <input type="text" name="new-task" id="new-task" placeholder="Add new task" :class="{ error: taskStore.isThereError }"
             @keypress="taskStore.addTask($event)">
         <div id="type-tasks">
-            <div class="type" v-for="typeStatus in status" :key="typeStatus.id" 
-            @click="taskStore.whichTasksDoYouWantToSee(data, status, $event)" :class="{ activate: typeStatus.isActivate }">
-                {{ typeStatus.status }}
+            <div class="type" v-for="status in statusList" :key="`${status}Key`" 
+            @click="taskStore.showSpecificTasks(data, statusList, $event)" :class="{ activate: status === taskStore.currentStatus}">
+                {{ status }}
             </div>
         </div>
         <div id="tasks" v-if="taskStore.tasks.length">
-            <taskItem v-for="task in taskStore.tasks" :key="task.id" @toggle-task="taskStore.toggleStatusOfTask(task)" :task-data="task">
+            <taskItem v-for="task in taskStore.filteredTasks" :key="`${task.name}Key`" @toggle-task="taskStore.toggleStatusOfTask(task)" :task-data="task">
                 <template #task-name>
                     {{ task.name }}
                 </template>
@@ -20,12 +20,12 @@
     </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 
-import { reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 import { useTaskStore } from './stores/TaskStore';
-import taskItem from './components/TaskItem.vue'
+import taskItem from './components/TaskItem.vue';
 
 import data from '../tasks.json'
 
@@ -35,27 +35,7 @@ onMounted(() => {
     taskStore.tasks = data
 })
 
-const status = reactive([
-
-    {
-        id: 1,
-        isActivate: true,
-        status: 'all',
-    },
-
-    {
-        id: 2,
-        isActivate: false,
-        status: 'pendent',
-    },
-
-    {
-        id: 3,
-        isActivate: false,
-        status: 'completed'
-    },
-
-])
+const statusList = ref<string[]>(['all', 'pendent', 'done']);
 
 </script>
 
